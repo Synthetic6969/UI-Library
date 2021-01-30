@@ -48,10 +48,11 @@ function guiLibrary.new()
     end
     
     local defaultAppearance = {
-		textColour = Color3.fromRGB(255, 255, 255),
-		underlineColour = Color3.fromRGB(0, 255, 140),
-		barColour = Color3.fromRGB(40, 40, 40),
-		backgroundColour = Color3.fromRGB(30, 30, 30),
+		textColour        = Color3.fromRGB(255, 255, 255);
+		underlineColour   = Color3.fromRGB(0, 255, 140);
+		barColour         = Color3.fromRGB(40, 40, 40);
+		backgroundColour  = Color3.fromRGB(30, 30, 30);
+		backgroundColour2 = Color3.fromRGB(20, 20, 20);
 	}
     
     function gui:newWindow(options)
@@ -146,7 +147,6 @@ function guiLibrary.new()
 		function window:nav(tabs, navSettings)
 		    if window.navFrame then return end
 		    navSettings = navSettings or {}
-		    self.count = self.count + 1
 		    
 		    self.navFrame = self:create("Frame", {
 		        Name = "Navigation";
@@ -156,7 +156,7 @@ function guiLibrary.new()
 		        Parent = self.container;
 		    })
 		
-		    self.underline = self:create("Frame", {
+		    --[[self.underline = self:create("Frame", {
     			Name = 'Underline';
     			Active = true;
     			ZIndex = 2;
@@ -165,7 +165,7 @@ function guiLibrary.new()
     			BorderSizePixel = 0;
     			BackgroundColor3 = options.underlineColour;
     			Parent = self.navFrame
-    		})
+    		})]]
     		
     		self.navFrameContainer = self:create("Frame", {
 		        Name = "Container";
@@ -176,7 +176,7 @@ function guiLibrary.new()
 		    })
     		
     		if options.rainbow then
-                self:rainbow(self.underline, 180)
+                --self:rainbow(self.underline, 180)
             end
 		
 		    self.tabs = {}
@@ -232,28 +232,75 @@ function guiLibrary.new()
 		    
 		    self.count = self.count + 1
 		    local section = {}
+		    setmetatable(section, {__index = self})
 		    section.scrollingFrame = self:create("ScrollingFrame", {
 		        Name = sectionOptions.name;
 		        Active = true;
-		        BackgroundColor3 = options.backgroundColour;
+		        BackgroundColor3 = options.backgroundColour2;
 		        BorderSizePixel = 0;
 		        Size = UDim2.new(1, 0, 0, 150);
 		        TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
 		        BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
 		        Parent = self.sectionContainer;
 		    })
+		
+		    self:create("UIListLayout", {
+		        SortOrder = "LayoutOrder";
+		        Parent = section.scrollingFrame;
+		    })
 		    
-    		function section:addFrame()
+    		function section:addFrame(frameOptions)
     		    if not self.frames then self.frames = {} end
+    		    assert(type(frameOptions) == "table", "Must supply frame options: {size = 0; frameType = 'Label';}")
     		    self.count = self.count + 1
     		    
     		    local frame = {}
     		    setmetatable(frame, {__index = self})
     		    
     		    frame.frame = self:create("Frame", {
-    		        Size = UDim2.new(1, 0, 0, 25);
+    		        Size = UDim2.new(1, 0, 0, frameOptions.size);
+    		        BackgroundColor3 = options.backgroundColour2;
+    		        BorderSizePixel = 0;
     		        Parent = self.scrollingFrame;
     		    })
+    		
+    		    if frameOptions.frameType == "Label" then
+    		        self:create("TextLabel", {
+    		            Size = UDim2.new(1, 0, 1, 0);
+    		            Text = frameOptions.text;
+    		            TextColor3 = options.textColour;
+    		            BackgroundTransparency = 1;
+    		            TextSize = 16;
+    		            Font = "Ubuntu";
+    		            BorderSizePixel = 0;
+    		            Parent = frame.frame;
+    		        })
+    		    elseif frameOptions.frameType == "Button" then
+    		        local button = self:create("TextButton", {
+    		            AnchorPoint = Vector2.new(0.5, 0.5);
+    		            Size = UDim2.new(0.375, 0, 0.8, 0);
+    		            Position = UDim2.new(0.5, 0, 0.5, 0);
+    		            Text = frameOptions.text;
+    		            TextColor3 = options.textColour;
+    		            BackgroundTransparency = 0;
+    		            BackgroundColor3 = options.backgroundColour;
+    		            TextSize = 16;
+    		            Font = "Ubuntu";
+    		            BorderSizePixel = 0;
+    		            Parent = frame.frame;
+    		        })
+    		        button.MouseButton1Click:Connect(function()
+    		            frameOptions.onClicked(button)
+    		        end)
+    		    end
+    		
+    		    local ySum = 0
+    		    for i, v in next, self.scrollingFrame:GetChildren() do
+    		        pcall(function()
+    		            ySum = ySum + v.AbsoluteSize.Y
+    		        end)
+    		    end
+    		    self.scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ySum)
     		
     		    return frame
     		end
@@ -278,7 +325,6 @@ function guiLibrary.new()
 	
 		function window:resize(tween, change)
 			local size = change or self:getSize()
-			--self.background.ClipsDescendants = true;
 			
 			if tween and not tweening then
 			    tweening = true
@@ -326,3 +372,27 @@ function guiLibrary.new()
 
     return gui
 end
+
+local gui = guiLibrary:new()
+local window = gui:newWindow({
+    text = "SynHub";
+    rainbow = true;
+})
+window:nav({
+    FE = "rbxassetid://";
+    RemoteSpy = "rbxassetid://";
+    ChatLogs = "rbxassetid://";
+    Credits = "rbxassetid://";
+})
+local Scripts = window:addSection({name = "Scripts"})
+local RemoteSpy = window:addSection({name = "Remote Spy"})
+local ChatLogs = window:addSection({name = "Chat Logs"})
+local Credits = window:addSection({name = "Credits"})
+Credits:addFrame({size = 30; frameType = "Label"; text = "UI: Synthetic#6969"})
+Credits:addFrame({size = 30; frameType = "Button"; text = "Discord"; onClicked = function(button)
+        setclipboard("https://www.discord.com/users/556605492315815949")
+        button.Text = "Copied!"
+        wait(1)
+        button.Text = "Discord"
+    end
+})
