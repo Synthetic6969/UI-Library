@@ -373,26 +373,4 @@ function guiLibrary.new()
     return gui
 end
 
-local gui = guiLibrary:new()
-local window = gui:newWindow({
-    text = "SynHub";
-    rainbow = true;
-})
-window:nav({
-    FE = "rbxassetid://";
-    RemoteSpy = "rbxassetid://";
-    ChatLogs = "rbxassetid://";
-    Credits = "rbxassetid://";
-})
-local Scripts = window:addSection({name = "Scripts"})
-local RemoteSpy = window:addSection({name = "Remote Spy"})
-local ChatLogs = window:addSection({name = "Chat Logs"})
-local Credits = window:addSection({name = "Credits"})
-Credits:addFrame({size = 30; frameType = "Label"; text = "UI: Synthetic#6969"})
-Credits:addFrame({size = 30; frameType = "Button"; text = "Discord"; onClicked = function(button)
-        setclipboard("https://www.discord.com/users/556605492315815949")
-        button.Text = "Copied!"
-        wait(1)
-        button.Text = "Discord"
-    end
-})
+return guiLibrary:new()
