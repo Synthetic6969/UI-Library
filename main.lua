@@ -373,4 +373,4 @@ function guiLibrary.new()
     return gui
 end
 
-return guiLibrary:new()
+return guiLibrary.new()
