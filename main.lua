@@ -179,10 +179,10 @@ function guiLibrary.new()
                 --self:rainbow(self.underline, 180)
             end
 		
-		    self.tabs = {}
-		    self.tabs.tabButtons = {}
+		    window.tabs = {}
+		    window.tabs.tabButtons = {}
 		    
-		    self.tabs.listLayout = self:create("UIListLayout", {
+		    window.tabs.listLayout = self:create("UIListLayout", {
 		        FillDirection = "Horizontal";
 		        SortOrder = "LayoutOrder";
 		        Parent = self.navFrameContainer;
@@ -205,13 +205,16 @@ function guiLibrary.new()
 		        })
 		    
 		        tabButton.MouseButton1Click:Connect(function()
-		            self.currentTab:TweenPosition(UDim2.new(1, 0, 0, 0), nil, nil, .2)
-		            self.tabs[i].Position = UDim2.new(-1, 0, 0, 0)
-		            self.tabs[i]:TweenPosition(UDim2.new(0, 0, 0, 0), nil, nil, .2)
-		            self.currentTab = self.tabs[i]
+					print("\n")
+					for i2, v2 in next, window.tabs do
+						print(i2, v2)
+					end
+					
+					local newPos = window.tabs[i].LayoutOrder * window.tabs[i].AbsoluteSize.X
+					game:service'TweenService':Create(window.numberValue, TweenInfo.new(math.abs(newPos - self.sectionContainer.CanvasPosition.X) / 1000), {Value = newPos}):Play()
 		        end)
 		        
-		        table.insert(self.tabs.tabButtons, tabButton)
+		        table.insert(window.tabs.tabButtons, tabButton)
 		    end
 		    
 		    self:resize()
@@ -222,25 +225,49 @@ function guiLibrary.new()
 		    assert(sectionOptions, "Must include arguments to function")
 		    
 		    if not self.sectionContainer then
-		        self.sectionContainer = self:create("Frame", {
-		            Name = "SectionContainer";
-		            BackgroundTransparency = 1;
-		            Size = UDim2.new(1, 0, 0, 150);
-		            Parent = self.container;
-		        })
+                self.sectionContainer = self:create("ScrollingFrame", {
+                    Name = "SectionContainer";
+                    Active = true;
+                    Size = UDim2.new(1, 0, 0, 150);
+                    BackgroundTransparency = 1;
+                    BackgroundColor3 = options.backgroundColour;
+                    ScrollingEnabled = false;
+                    ScrollingDirection = "X";
+                    ScrollBarThickness = 0;
+                    AutomaticCanvasSize = "X";
+                    Parent = self.container;
+                })
+				window.numberValue = Instance.new("NumberValue")
+				window.numberValue.Value = 0
+				game:service'RunService'.RenderStepped:Connect(function()
+					self.sectionContainer.CanvasPosition = Vector2.new(window.numberValue.Value, 0)
+				end)
+    
+                self.sectionContainerListLayout = self:create("UIListLayout", {
+                    Name = "UIListLayout";
+                    FillDirection = "Horizontal";
+					SortOrder = "LayoutOrder";
+                    Parent = self.sectionContainer;
+                })
 		    end
 		    
 		    self.count = self.count + 1
 		    local section = {}
 		    setmetatable(section, {__index = self})
+			local numOfTabs = 0
+			for i, v in next, window.tabs do
+				numOfTabs += 1
+			end
+			numOfTabs -= 2
 		    section.scrollingFrame = self:create("ScrollingFrame", {
 		        Name = sectionOptions.name;
 		        Active = true;
 		        BackgroundColor3 = options.backgroundColour2;
 		        BorderSizePixel = 0;
-		        Size = UDim2.new(1, 0, 0, 150);
+		        Size = UDim2.new(0, 500, 0, 150);
 		        TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
 		        BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
+				LayoutOrder = numOfTabs;
 		        Parent = self.sectionContainer;
 		    })
 		
@@ -292,6 +319,20 @@ function guiLibrary.new()
     		        button.MouseButton1Click:Connect(function()
     		            frameOptions.onClicked(button)
     		        end)
+				else
+					local properties = frameOptions.properties
+					properties.Parent = frame.frame
+					local newFrame = self:create(frameOptions.frameType, properties)
+
+					local ySum = 0
+					for i, v in next, self.scrollingFrame:GetChildren() do
+						pcall(function()
+							ySum = ySum + v.AbsoluteSize.Y
+						end)
+					end
+					self.scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ySum)
+
+					return newFrame
     		    end
     		
     		    local ySum = 0
@@ -306,10 +347,7 @@ function guiLibrary.new()
     		end
     		
     		self:resize()
-    		if not self.currentTab then
-		        self.currentTab = section.scrollingFrame
-		    end
-    		self.tabs[sectionOptions.name] = section.scrollingFrame
+    		window.tabs[sectionOptions.name] = section.scrollingFrame
     		return section
     	end
 		
@@ -372,5 +410,3 @@ function guiLibrary.new()
 
     return gui
 end
-
-return guiLibrary.new()
