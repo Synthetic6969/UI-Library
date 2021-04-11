@@ -410,3 +410,5 @@ function guiLibrary.new()
 
     return gui
 end
+
+return guiLibrary
